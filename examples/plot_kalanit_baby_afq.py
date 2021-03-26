@@ -23,7 +23,7 @@ import nibabel as nib
 
 from AFQ import api
 import AFQ.registration as reg
-from AFQ.mask import RoiMask, MaskFile
+from AFQ.definitions.mask import RoiMask, MaskFile
 
 
 # Ensure segmentation logging information is included in this example's output
@@ -409,6 +409,10 @@ print("Validating data...")
 
 kalanit_home = op.join(afq_home, 'kalanit')
 
+# t2_img = nib.Nifti1Image.load(op.join(kalanit_home, 'derivatives/mrtrix/sub-01/ses-01/anat/t2_biascorr_acpc.nii.gz'))
+# b0_img = nib.Nifti1Image.load(op.join(kalanit_home, 'derivatives/mrtrix/sub-01/ses-01/anat/b0.nii.gz'))
+# reg_subj = reg.resample(t2_img, b0_img, t2_img.affine, b0_img.affine)
+
 myafq = api.AFQ(# ==== BIDS parameters ====
                 bids_path=kalanit_home,
                 # dmriprep='kalanit baby project pipeline',
@@ -422,7 +426,9 @@ myafq = api.AFQ(# ==== BIDS parameters ====
                 # max_bval=200,  # override
                 reg_template=pediatric_templates['UNCNeo-withCerebellum-for-babyAFQ'],
                 # reg_subject="power_map", # default
-                reg_subject="b0",  # override
+                # reg_subject="b0",  # override
+                # reg_subject=op.join(kalanit_home, 'derivatives/mrtrix/sub-01/ses-01/anat/t2_biascorr_acpc_resliced2dwi_masked.nii.gz'),
+                reg_subject={'extension': 'nii.gz', 'datatype': 'anat', 'suffix': 'masked'},
                 # brain_mask=B0Mask(), # default
                 # brain_mask=MaskFile("brainmask",
                 #                     {"scope": "dHCP neonatal dMRI pipeline"}),
