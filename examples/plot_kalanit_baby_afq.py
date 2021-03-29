@@ -13,8 +13,7 @@ TODO cite @mareike
   described in [Yeatman2012]_ and further elaborated in [Yeatman2014]_.
 
 """
-import logging
-import sys
+
 import time
 import os.path as op
 import plotly
@@ -23,17 +22,7 @@ import nibabel as nib
 
 from AFQ import api
 import AFQ.registration as reg
-from AFQ.definitions.mask import RoiMask, MaskFile
-
-
-# Ensure segmentation logging information is included in this example's output
-# root = logging.getLogger()
-# root.setLevel(logging.ERROR)
-# logging.getLogger('AFQ.Segmentation').setLevel(logging.INFO)
-# logging.getLogger('AFQ.tractography').setLevel(logging.INFO)
-# handler = logging.StreamHandler(sys.stdout)
-# handler.setLevel(logging.INFO)
-# root.addHandler(handler)
+from AFQ.definitions.mapping import AffMap
 
 afq_home = op.join(op.expanduser('~'), 'AFQ_data')
 
@@ -206,8 +195,8 @@ def read_pediatric_templates(resample_to=False):
     pediatric_templates['ARC_roi3_R'] = pediatric_templates['SLFt_roi3_R']
 
     # For the middle longitudinal fasciculus (MdLF) reuse ILF ROI
-    pediatric_templates['MdLF_roi2_L'] = pediatric_templates['ILF_roi1_L']
-    pediatric_templates['MdLF_roi2_R'] = pediatric_templates['ILF_roi1_R']
+    pediatric_templates['MdLF_roi2_L'] = pediatric_templates['ILF_roi2_L']
+    pediatric_templates['MdLF_roi2_R'] = pediatric_templates['ILF_roi2_R']
 
     return pediatric_templates
 
@@ -305,7 +294,7 @@ def make_pediatric_bundle_dict(bundle_names=pediatric_bundle_names,
     # each bundles gets a digit identifier (to be stored in the tractogram)
     uid = 1
 
-    for name in pediatric_bundle_names:
+    for name in bundle_names:
         # ROIs that cross the mid-line
         if name in ["FA", "FP"]:
             pediatric_bundles[name] = {
@@ -409,75 +398,26 @@ print("Validating data...")
 
 kalanit_home = op.join(afq_home, 'kalanit')
 
-# t2_img = nib.Nifti1Image.load(op.join(kalanit_home, 'derivatives/mrtrix/sub-01/ses-01/anat/t2_biascorr_acpc.nii.gz'))
-# b0_img = nib.Nifti1Image.load(op.join(kalanit_home, 'derivatives/mrtrix/sub-01/ses-01/anat/b0.nii.gz'))
-# reg_subj = reg.resample(t2_img, b0_img, t2_img.affine, b0_img.affine)
-
 myafq = api.AFQ(# ==== BIDS parameters ====
                 bids_path=kalanit_home,
-                # dmriprep='kalanit baby project pipeline',
-                # bids_filters={"suffix": "dwi"}, # default
-                custom_tractography_bids_filters={'scope':'mrtrix'}, # default
+                custom_tractography_bids_filters={'scope':'mrtrix'},
                 # ===== Registration parameters ====
-                # b0_threshold=50, # default
-                # min_bval=None, # default
-                # min_bval=700,  # override
-                # max_bval=None, # default
-                # max_bval=200,  # override
                 reg_template=pediatric_templates['UNCNeo-withCerebellum-for-babyAFQ'],
-                # reg_subject="power_map", # default
                 # reg_subject="b0",  # override
-                # reg_subject=op.join(kalanit_home, 'derivatives/mrtrix/sub-01/ses-01/anat/t2_biascorr_acpc_resliced2dwi_masked.nii.gz'),
                 reg_subject={'extension': 'nii.gz', 'datatype': 'anat', 'suffix': 'masked'},
-                # brain_mask=B0Mask(), # default
-                # brain_mask=MaskFile("brainmask",
-                #                     {"scope": "dHCP neonatal dMRI pipeline"}),
-                # use_prealign=True, # default
+                mapping=AffMap(),
                 # ==== Bundle parameters ====
                 bundle_info=pediatric_bundle_names,
-                # scalars=["dti_fa", "dti_md"], # default
+                # bundle_info=["UNC", "ILF", "MdLF"],
                 # ==== Compute parameters ====
-                # dask_it=False,
-                # force_recompute=False, # default
-                # force_recompute=True,  # override
                 # ==== Tracking parameters ====
-                # defaults:
-                # seed_mask=None, seed_threshold=0, n_seeds=1,
-                # random_seeds=False, rng_seed=None, stop_mask=None,
-                # stop_threshold=0, step_size=0.5, min_length=10,
-                # max_length=1000, odf_model="DTI", tracker="local"
-                # tracking_params={"odf_model": "CSD"},
-
-                # tracking_params=None, # default
-                # tracking_params={"seed_threshold": 0.15},  # override
-                # tracking_params={"seed_mask": RoiMask(),
-                #                  "stop_threshold": 0.1},
-                # params_file, directions="det", max_angle=30., sphere=None,
                 # ==== Segmentation parameters ====
-                # defaults:
-                # nb_points=False, seg_algo='AFQ', reg_algo=None,
-                # clip_edges=False, progressive=True, greater_than=50,
-                # rm_small_clusters=50, model_clust_thr=5, reduction_thr=20,
-                # refine=False, pruning_thr=5, b0_threshold=50,
-                # prob_threshold=0, rng=None, return_idx=False,
-                # filter_by_endpoints=True, dist_to_aal=4,
-                # save_intermediates=None
-
-                # segmentation_params=None, # default
-                # TODO endpoints? -- turn off for now
                 # segmentation_params={"clip_edges": True, "filter_by_endpoints": False},
+                # segmentation_params={"filter_by_endpoints": False, "dist_to_waypoint": 0.5},
                 segmentation_params={"filter_by_endpoints": False},
                 # ==== Cleaning parameters ====
-                # defaults:
-                # n_points=100, clean_rounds=5, distance_threshold=5,
-                # length_threshold=4, min_sl=20, stat='mean',
-                # return_idx=False
-
-                # clean_params=None # default
                 clean_params={"distance_threshold": 3}
                 # ==== Visualiation parameters ====
-                # virtual_frame_buffer=False, # default
-                # viz_backend="plotly_no_gif", # default
                 )
 
 # export AFQ artifacts for quality control
