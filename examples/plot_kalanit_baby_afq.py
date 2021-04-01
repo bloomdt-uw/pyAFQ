@@ -23,6 +23,7 @@ import nibabel as nib
 from AFQ import api
 import AFQ.registration as reg
 from AFQ.definitions.mapping import AffMap
+from AFQ.definitions.mask import MaskFile
 
 afq_home = op.join(op.expanduser('~'), 'AFQ_data')
 
@@ -406,6 +407,7 @@ myafq = api.AFQ(# ==== BIDS parameters ====
                 # reg_subject="b0",  # override
                 reg_subject={'extension': 'nii.gz', 'datatype': 'anat', 'suffix': 'masked'},
                 mapping=AffMap(),
+                brain_mask=MaskFile('brainMask'),
                 # ==== Bundle parameters ====
                 bundle_info=pediatric_bundle_names,
                 # bundle_info=["UNC", "ILF", "MdLF"],
