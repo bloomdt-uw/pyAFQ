@@ -401,24 +401,20 @@ kalanit_home = op.join(afq_home, 'kalanit')
 
 myafq = api.AFQ(# ==== BIDS parameters ====
                 bids_path=kalanit_home,
-                custom_tractography_bids_filters={'scope':'mrtrix'},
+                custom_tractography_bids_filters={'suffix':'WholeBrainFG'},
                 # ===== Registration parameters ====
                 reg_template=pediatric_templates['UNCNeo-withCerebellum-for-babyAFQ'],
-                # reg_subject="b0",  # override
                 reg_subject={'extension': 'nii.gz', 'datatype': 'anat', 'suffix': 'masked'},
                 mapping=AffMap(),
                 brain_mask=MaskFile('brainMask'),
                 # ==== Bundle parameters ====
                 bundle_info=pediatric_bundle_names,
-                # bundle_info=["UNC", "ILF", "MdLF"],
                 # ==== Compute parameters ====
                 # ==== Tracking parameters ====
                 # ==== Segmentation parameters ====
-                # segmentation_params={"clip_edges": True, "filter_by_endpoints": False},
-                # segmentation_params={"filter_by_endpoints": False, "dist_to_waypoint": 0.5},
-                segmentation_params={"filter_by_endpoints": False},
+                segmentation_params={'filter_by_endpoints': False, 'dist_to_waypoint': 1},
                 # ==== Cleaning parameters ====
-                clean_params={"distance_threshold": 3}
+                clean_params={'distance_threshold': 4}
                 # ==== Visualiation parameters ====
                 )
 
